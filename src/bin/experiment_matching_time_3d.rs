@@ -13,7 +13,7 @@ fn main() {
         .try_init()
         .unwrap();
 
-    let root = BitMapBackend::new("charts/3d_time.png", (1280, 720)).into_drawing_area();
+    let root = BitMapBackend::new("charts/3d_time.png", (720, 720)).into_drawing_area();
 
     root.fill(&WHITE).unwrap();
 
