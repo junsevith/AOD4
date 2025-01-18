@@ -1,11 +1,10 @@
-use std::cmp::{max, min};
 use itertools::Itertools;
 use log::LevelFilter;
-use std::time::Duration;
 use plotters::prelude::{BitMapBackend, ChartBuilder, Color, Cubiod, IntoDrawingArea, BLACK, BLUE, WHITE};
+use std::cmp::min;
+use std::time::Duration;
 use AOD4::bipartite::bipartite;
-use AOD4::chart::draw_chart;
-use AOD4::matching::hopcroft_karp;
+use AOD4::hopcroft_karp::hopcroft_karp;
 
 fn main() {
     env_logger::builder()
@@ -14,14 +13,14 @@ fn main() {
         .try_init()
         .unwrap();
 
-    let root = BitMapBackend::new("charts/3d_time.png", (1280, 720)).into_drawing_area();
+    let root = BitMapBackend::new("charts/3d_matching.png", (1280, 720)).into_drawing_area();
 
     root.fill(&WHITE).unwrap();
 
     let mut chart = ChartBuilder::on(&root)
         .margin(20)
-        .caption("Algorithm run time per k and i", ("sans-serif", 40))
-        .build_cartesian_3d(3usize..10, 0usize..300, 1usize..10)
+        .caption("Max matching size per k and i", ("sans-serif", 40))
+        .build_cartesian_3d(3usize..10, 0usize..600, 1usize..10)
         .unwrap();
 
     chart.with_projection(|mut pb| {
@@ -38,7 +37,7 @@ fn main() {
             .flatten()
             .map(|(x,z)| {
                 // let (paths, time) = experiment(x, z, 10);
-                Cubiod::new([(x, 0, z), (x + 1, experiment(x, z, 10).1.as_micros() as usize, z + 1)], BLUE.filled(), &BLACK)
+                Cubiod::new([(x, 0, z), (x + 1, experiment(x, z, 10).0 as usize, z + 1)], BLUE.filled(), &BLACK)
             })
     ).unwrap();
 }

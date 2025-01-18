@@ -1,10 +1,10 @@
-use std::cmp::max;
 use itertools::Itertools;
 use log::LevelFilter;
+use plotters::prelude::{BitMapBackend, ChartBuilder, Color, Cubiod, IntoDrawingArea, BLACK, BLUE, WHITE};
+use std::cmp::min;
 use std::time::Duration;
 use AOD4::bipartite::bipartite;
-use AOD4::chart::draw_chart;
-use AOD4::matching::hopcroft_karp;
+use AOD4::hopcroft_karp::hopcroft_karp;
 
 fn main() {
     env_logger::builder()
@@ -13,30 +13,37 @@ fn main() {
         .try_init()
         .unwrap();
 
-    let i = 10;
-    let iter = i..=10;
-    let (matching, time): (Vec<_>, Vec<_>) =
-        iter.clone().map(|k| experiment(k, i, 10)).multiunzip();
+    let root = BitMapBackend::new("charts/3d_time.png", (1280, 720)).into_drawing_area();
 
-    // draw_chart(
-    //     vec![matching],
-    //     vec!["Maximum matching size"],
-    //     iter.clone(),
-    //     &format!("Maximum matching size in bipartite graph of k = {}", k),
-    //     |_, y| y,
-    // );
+    root.fill(&WHITE).unwrap();
 
-    draw_chart(
-        vec![time.iter().map(|x| x.as_secs_f64()).collect()],
-        vec!["Algorithm run time per k"],
-        iter,
-        &format!("Algorithm run time in in bipartite graph of i = {}", i),
-        |_, y| y,
-    );
+    let mut chart = ChartBuilder::on(&root)
+        .margin(20)
+        .caption("Algorithm run time in microseconds per k and i", ("sans-serif", 40))
+        .build_cartesian_3d(3usize..10, 0usize..250, 1usize..10)
+        .unwrap();
+
+    chart.with_projection(|mut pb| {
+        pb.pitch = 0.3;
+        pb.yaw = 3.95;
+        pb.scale = 0.9;
+        pb.into_matrix()
+    });
+
+    chart.configure_axes().draw().unwrap();
+    chart.draw_series(
+        (3..10).rev()
+            .map(|x| std::iter::repeat(x).zip((1..10).rev()))
+            .flatten()
+            .map(|(x,z)| {
+                // let (paths, time) = experiment(x, z, 10);
+                Cubiod::new([(x, 0, z), (x + 1, experiment(x, z, 10).1.as_micros() as usize, z + 1)], BLUE.filled(), &BLACK)
+            })
+    ).unwrap();
 }
 
 fn experiment(k: usize, i: usize, repeats: usize) -> (f64, Duration) {
-    let i = max(k, i);
+    let i = min(k, i);
     let (matching, time): (Vec<_>, Vec<_>) = (0..repeats)
         .map(|_| {
             let graph = bipartite(k, i);

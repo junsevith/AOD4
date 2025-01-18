@@ -5,7 +5,7 @@ use plotters::style::{BLACK, Palette99};
 
 pub fn draw_chart<T>(data: Vec<Vec<T>>,names: Vec<&str>, n_range: impl Iterator<Item=usize> + Clone, name: &str, scale: impl Fn(f64, f64) -> f64)
     where T: Clone + PartialOrd, f64: From<T> {
-    let file = format!("charts/chart_{}.png", name);
+    let file = format!("charts/chart_{}.png", name.replace(" ", "_").to_lowercase());
 
     let mut n_range_copy = n_range.clone();
     let first = n_range_copy.next().unwrap() as f64;
@@ -15,13 +15,23 @@ pub fn draw_chart<T>(data: Vec<Vec<T>>,names: Vec<&str>, n_range: impl Iterator<
     let max  = data.iter()
         .map(|y| n_range.clone().zip(y.iter())
             .map(|(x,y)| (x as f64 , f64::from(y.clone())))
-            .fold(0.0,|a, (bx,by) | {
+            .fold(f64::MIN,|a, (bx,by) | {
                 let b = scale(bx, by);
                 if a > b { a } else { b }
             }))
         .reduce(|a, b| if a > b { a } else { b }).unwrap();
 
-    let y_range = 0.0..(max * 1.1);
+    let min = data.iter()
+        .map(|y| n_range.clone().zip(y.iter())
+            .map(|(x,y)| (x as f64 , f64::from(y.clone())))
+            .fold(0.0,|a, (bx,by) | {
+                let b = scale(bx, by);
+                if a < b { a } else { b }
+            }))
+        .reduce(|a, b| if a < b { a } else { b }).unwrap();
+
+    let space = ((max - min) * 0.05);
+    let y_range = (min)..(max + space );
 
 
     let drawing_area = BitMapBackend::new(&file, (1280, 720)).into_drawing_area();

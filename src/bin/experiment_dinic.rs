@@ -2,8 +2,8 @@ use itertools::Itertools;
 use log::LevelFilter;
 use std::time::Duration;
 use AOD4::chart::draw_chart;
+use AOD4::dinic::dinic;
 use AOD4::hypercube::hypercube;
-use AOD4::edmonds_karp::edmonds_karp;
 
 fn main() {
     env_logger::builder()
@@ -15,27 +15,27 @@ fn main() {
     let (flow, paths, time): (Vec<_>, Vec<_>, Vec<_>) =
         iter.clone().map(|k| experiment(k, 10)).multiunzip();
 
-    draw_chart(
-        vec![flow],
-        vec!["Maximum flow"],
-        iter.clone(),
-        "Maximum flow in hypercube of x dimension",
-        |_, y| y,
-    );
-
-    draw_chart(
-        vec![paths],
-        vec!["Count of expanding paths"],
-        iter.clone(),
-        "Count of expanding paths in hypercube of x dimension",
-        |_, y| y,
-    );
+    // draw_chart(
+    //     vec![flow],
+    //     vec!["Maximum flow"],
+    //     iter.clone(),
+    //     "Dinic: Maximum flow in hypercube of x dimension",
+    //     |_, y| y,
+    // );
+    //
+    // draw_chart(
+    //     vec![paths],
+    //     vec!["Count of expanding paths"],
+    //     iter.clone(),
+    //     "Dinic: Count of expanding paths in hypercube of x dimension",
+    //     |_, y| y,
+    // );
 
     draw_chart(
         vec![time.iter().map(|x| x.as_secs_f64()).collect()],
         vec!["Algorithm run time"],
         iter,
-        "Algorithm run time in hypercube of x dimension",
+        "Dinic algorithm run time in hypercube of x dimension",
         |_, y| y,
     );
 }
@@ -45,7 +45,7 @@ fn experiment(k: usize, repeats: usize) -> (f64, f64, Duration) {
         .map(|_| {
             let graph = hypercube(k as u32);
             let len = graph.vertices.len() - 1;
-            edmonds_karp(graph, 0, len, false)
+            dinic(graph, 0, len, false)
         })
         .multiunzip();
     (
