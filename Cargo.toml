@@ -1,0 +1,14 @@
+[package]
+name = "AOD4"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rand = "0.9.0-beta.3"
+log = { version = "0.4.25", features = ["release_max_level_info","max_level_trace"] }
+env_logger = "0.11.6"
+itertools = "0.14.0"
+plotters = "0.3.7"
+
+[profile.bench]
+debug = true
